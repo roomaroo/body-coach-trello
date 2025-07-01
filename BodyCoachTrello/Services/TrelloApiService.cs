@@ -126,12 +126,12 @@ public class TrelloApiService : ITrelloApiService
 
         if (!string.IsNullOrWhiteSpace(request.Description))
         {
-            queryParams.Insert(2, $"desc={Uri.EscapeDataString(request.Description)}");
+            queryParams.Add($"desc={Uri.EscapeDataString(request.Description)}");
         }
 
         if (!string.IsNullOrWhiteSpace(request.Position))
         {
-            queryParams.Insert(-1, $"pos={request.Position}");
+            queryParams.Add($"pos={request.Position}");
         }
 
         var url = $"cards?{string.Join("&", queryParams)}";
