@@ -52,3 +52,9 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# User secrets and environment files
+secrets.json
+.env
+.env.local
+.env.production
