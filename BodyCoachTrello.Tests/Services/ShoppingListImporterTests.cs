@@ -26,8 +26,7 @@ public class ShoppingListImporterTests
             ApiKey = "test-api-key",
             Token = "test-token",
             BaseUrl = "https://api.trello.com/1/",
-            DefaultBoardId = "default-board-123",
-            DefaultBoardDescription = "Test Description"
+            DefaultBoardId = "default-board-123"
         };
         _mockOptions = new Mock<IOptions<TrelloConfiguration>>();
         _mockOptions.Setup(x => x.Value).Returns(_config);
@@ -61,10 +60,7 @@ public class ShoppingListImporterTests
         Assert.Equal(existingBoard.Name, result.Name);
 
         // Verify board lookup was called
-        _mockTrelloApi.Verify(x => x.FindBoardByNameAsync(_config.DefaultBoardName), Times.Once);
-        
-        // Verify no new board was created
-        _mockTrelloApi.Verify(x => x.CreateBoardAsync(It.IsAny<CreateBoardRequest>()), Times.Never);
+        _mockTrelloApi.Verify(x => x.GetBoardByIdAsync(_config.DefaultBoardId), Times.Once);
         
         // Verify lists were created for each category
         _mockTrelloApi.Verify(x => x.CreateListAsync(It.Is<CreateListRequest>(r => r.Name == "Fruits")), Times.Once);
@@ -72,69 +68,53 @@ public class ShoppingListImporterTests
     }
 
     [Fact]
-    public async Task ImportShoppingListAsync_NonExistingBoard_CreatesNewBoard()
+    public async Task ImportShoppingListAsync_NonExistingBoard_ThrowsException()
     {
         // Arrange
         var shoppingList = CreateTestShoppingList();
-        var newBoard = new TrelloBoard
-        {
-            Id = "new-board-123",
-            Name = "Default Shopping Lists",
-            ShortUrl = "https://trello.com/b/new-board-123"
-        };
 
-        _mockTrelloApi.Setup(x => x.FindBoardByNameAsync(_config.DefaultBoardName))
+        _mockTrelloApi.Setup(x => x.GetBoardByIdAsync(_config.DefaultBoardId))
                      .ReturnsAsync((TrelloBoard?)null);
 
-        _mockTrelloApi.Setup(x => x.CreateBoardAsync(It.IsAny<CreateBoardRequest>()))
-                     .ReturnsAsync(newBoard);
-
-        SetupListAndCardCreation();
-
-        // Act
-        var result = await _importer.ImportShoppingListAsync(shoppingList);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(newBoard.Id, result.Id);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            _importer.ImportShoppingListAsync(shoppingList));
+        
+        Assert.Contains("not found or not accessible", exception.Message);
+        Assert.Contains(_config.DefaultBoardId, exception.Message);
 
         // Verify board lookup was called
-        _mockTrelloApi.Verify(x => x.FindBoardByNameAsync(_config.DefaultBoardName), Times.Once);
-        
-        // Verify new board was created
-        _mockTrelloApi.Verify(x => x.CreateBoardAsync(It.Is<CreateBoardRequest>(r => 
-            r.Name == _config.DefaultBoardName && 
-            r.Description == _config.DefaultBoardDescription)), Times.Once);
+        _mockTrelloApi.Verify(x => x.GetBoardByIdAsync(_config.DefaultBoardId), Times.Once);
     }
 
     [Fact]
-    public async Task ImportShoppingListAsync_CustomBoardName_UsesCustomName()
+    public async Task ImportShoppingListAsync_CustomBoardId_UsesCustomBoard()
     {
         // Arrange
         var shoppingList = CreateTestShoppingList();
-        var customBoardName = "My Custom Board";
+        var customBoardId = "custom-board-123";
         var customBoard = new TrelloBoard
         {
-            Id = "custom-board-123",
-            Name = customBoardName,
+            Id = customBoardId,
+            Name = "My Custom Board",
             ShortUrl = "https://trello.com/b/custom-board-123"
         };
 
-        _mockTrelloApi.Setup(x => x.FindBoardByNameAsync(customBoardName))
+        _mockTrelloApi.Setup(x => x.GetBoardByIdAsync(customBoardId))
                      .ReturnsAsync(customBoard);
 
         SetupListAndCardCreation();
 
         // Act
-        var result = await _importer.ImportShoppingListAsync(shoppingList, customBoardName);
+        var result = await _importer.ImportShoppingListAsync(shoppingList, customBoardId);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(customBoard.Id, result.Id);
 
-        // Verify custom board name was used
-        _mockTrelloApi.Verify(x => x.FindBoardByNameAsync(customBoardName), Times.Once);
-        _mockTrelloApi.Verify(x => x.FindBoardByNameAsync(_config.DefaultBoardName), Times.Never);
+        // Verify custom board ID was used
+        _mockTrelloApi.Verify(x => x.GetBoardByIdAsync(customBoardId), Times.Once);
+        _mockTrelloApi.Verify(x => x.GetBoardByIdAsync(_config.DefaultBoardId), Times.Never);
     }
 
     [Fact]
@@ -158,7 +138,7 @@ public class ShoppingListImporterTests
             ShortUrl = "https://trello.com/b/board-123"
         };
 
-        _mockTrelloApi.Setup(x => x.FindBoardByNameAsync(_config.DefaultBoardName))
+        _mockTrelloApi.Setup(x => x.GetBoardByIdAsync(_config.DefaultBoardId))
                      .ReturnsAsync(board);
 
         // Act
@@ -193,7 +173,7 @@ public class ShoppingListImporterTests
         var board = new TrelloBoard { Id = "board-123", Name = "Test Board", ShortUrl = "https://trello.com/b/board-123" };
         var list = new TrelloList { Id = "list-123", Name = "Empty Category", BoardId = "board-123" };
 
-        _mockTrelloApi.Setup(x => x.FindBoardByNameAsync(_config.DefaultBoardName)).ReturnsAsync(board);
+        _mockTrelloApi.Setup(x => x.GetBoardByIdAsync(_config.DefaultBoardId)).ReturnsAsync(board);
         _mockTrelloApi.Setup(x => x.CreateListAsync(It.IsAny<CreateListRequest>())).ReturnsAsync(list);
 
         // Act

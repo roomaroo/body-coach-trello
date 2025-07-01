@@ -67,7 +67,7 @@ public class ShoppingListImporter : IShoppingListImporter
     }
 
     /// <summary>
-    /// Get existing board by ID
+    /// Get existing board by ID, throw error if not found
     /// </summary>
     private async Task<TrelloBoard> GetBoardAsync(string boardId)
     {
@@ -76,7 +76,7 @@ public class ShoppingListImporter : IShoppingListImporter
         var board = await _trelloApi.GetBoardByIdAsync(boardId);
         if (board == null)
         {
-            throw new InvalidOperationException($"Board with ID '{boardId}' not found or not accessible.");
+            throw new InvalidOperationException($"Board with ID '{boardId}' not found or not accessible. Please verify the board ID and ensure you have access to the board.");
         }
 
         _logger.LogInformation("Found board: {BoardName} ({BoardId})", board.Name, board.Id);

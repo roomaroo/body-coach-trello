@@ -26,8 +26,7 @@ public class TrelloApiServiceTests : IDisposable
             ApiKey = "test-api-key",
             Token = "test-token",
             BaseUrl = "https://api.trello.com/1/",
-            DefaultBoardName = "Test Board",
-            DefaultBoardDescription = "Test Description"
+            DefaultBoardId = "test-board",
         };
         _mockOptions = new Mock<IOptions<TrelloConfiguration>>();
         _mockOptions.Setup(x => x.Value).Returns(_config);
@@ -40,39 +39,6 @@ public class TrelloApiServiceTests : IDisposable
     {
         _httpClient?.Dispose();
         _mockHandler?.Dispose();
-    }
-
-    [Fact]
-    public async Task CreateBoardAsync_ValidRequest_ReturnsBoard()
-    {
-        // Arrange
-        var service = new TrelloApiService(_httpClient, _mockOptions.Object, _mockLogger.Object);
-        var request = new CreateBoardRequest
-        {
-            Name = "Test Board",
-            Description = "Test Description"
-        };
-
-        var expectedBoard = new TrelloBoard
-        {
-            Id = "board123",
-            Name = "Test Board",
-            ShortUrl = "https://trello.com/b/board123"
-        };
-
-        _mockHandler.SetupResponse(HttpStatusCode.OK, JsonSerializer.Serialize(expectedBoard, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        }));
-
-        // Act
-        var result = await service.CreateBoardAsync(request);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("board123", result.Id);
-        Assert.Equal("Test Board", result.Name);
-        Assert.Equal("https://trello.com/b/board123", result.ShortUrl);
     }
 
     [Fact]
@@ -169,24 +135,25 @@ public class TrelloApiServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task FindBoardByNameAsync_ExistingBoard_ReturnsBoard()
+    public async Task GetBoardByIdAsync_ExistingBoard_ReturnsBoard()
     {
         // Arrange
         var service = new TrelloApiService(_httpClient, _mockOptions.Object, _mockLogger.Object);
         
-        var boards = new List<TrelloBoard>
-        {
-            new() { Id = "board1", Name = "Shopping Lists", ShortUrl = "https://trello.com/b/board1" },
-            new() { Id = "board2", Name = "Work Tasks", ShortUrl = "https://trello.com/b/board2" }
+        var board = new TrelloBoard 
+        { 
+            Id = "board1", 
+            Name = "Shopping Lists", 
+            ShortUrl = "https://trello.com/b/board1" 
         };
 
-        _mockHandler.SetupResponse(HttpStatusCode.OK, JsonSerializer.Serialize(boards, new JsonSerializerOptions
+        _mockHandler.SetupResponse(HttpStatusCode.OK, JsonSerializer.Serialize(board, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         }));
 
         // Act
-        var result = await service.FindBoardByNameAsync("Shopping Lists");
+        var result = await service.GetBoardByIdAsync("board1");
 
         // Assert
         Assert.NotNull(result);
@@ -195,51 +162,18 @@ public class TrelloApiServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task FindBoardByNameAsync_NonExistingBoard_ReturnsNull()
+    public async Task GetBoardByIdAsync_NonExistingBoard_ReturnsNull()
     {
         // Arrange
         var service = new TrelloApiService(_httpClient, _mockOptions.Object, _mockLogger.Object);
         
-        var boards = new List<TrelloBoard>
-        {
-            new() { Id = "board1", Name = "Shopping Lists", ShortUrl = "https://trello.com/b/board1" }
-        };
-
-        _mockHandler.SetupResponse(HttpStatusCode.OK, JsonSerializer.Serialize(boards, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        }));
+        _mockHandler.SetupResponse(HttpStatusCode.NotFound, "");
 
         // Act
-        var result = await service.FindBoardByNameAsync("Non-existent Board");
+        var result = await service.GetBoardByIdAsync("board2");
 
         // Assert
         Assert.Null(result);
-    }
-
-    [Fact]
-    public async Task FindBoardByNameAsync_CaseInsensitive_ReturnsBoard()
-    {
-        // Arrange
-        var service = new TrelloApiService(_httpClient, _mockOptions.Object, _mockLogger.Object);
-        
-        var boards = new List<TrelloBoard>
-        {
-            new() { Id = "board1", Name = "Shopping Lists", ShortUrl = "https://trello.com/b/board1" }
-        };
-
-        _mockHandler.SetupResponse(HttpStatusCode.OK, JsonSerializer.Serialize(boards, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        }));
-
-        // Act
-        var result = await service.FindBoardByNameAsync("shopping lists");
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("board1", result.Id);
-        Assert.Equal("Shopping Lists", result.Name);
     }
 
     [Fact]

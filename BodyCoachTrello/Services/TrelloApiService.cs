@@ -13,11 +13,6 @@ namespace BodyCoachTrello.Services;
 public interface ITrelloApiService
 {
     /// <summary>
-    /// Create a new board
-    /// </summary>
-    Task<TrelloBoard> CreateBoardAsync(CreateBoardRequest request);
-
-    /// <summary>
     /// Create a new list on a board
     /// </summary>
     Task<TrelloList> CreateListAsync(CreateListRequest request);
@@ -75,47 +70,6 @@ public class TrelloApiService : ITrelloApiService
 
         // Configure HttpClient
         _httpClient.BaseAddress = new Uri(_config.BaseUrl);
-    }
-
-    public async Task<TrelloBoard> CreateBoardAsync(CreateBoardRequest request)
-    {
-        _logger.LogInformation("Creating Trello board: {BoardName}", request.Name);
-
-        var queryParams = new List<string>
-        {
-            $"name={Uri.EscapeDataString(request.Name)}",
-            $"defaultLists={request.DefaultLists.ToString().ToLower()}",
-            GetAuthQueryParams()
-        };
-
-        if (!string.IsNullOrWhiteSpace(request.Description))
-        {
-            queryParams.Insert(1, $"desc={Uri.EscapeDataString(request.Description)}");
-        }
-
-        var url = $"boards?{string.Join("&", queryParams)}";
-
-        try
-        {
-            var response = await _httpClient.PostAsync(url, null);
-            await EnsureSuccessStatusCodeAsync(response);
-
-            var content = await response.Content.ReadAsStringAsync();
-            var board = JsonSerializer.Deserialize<TrelloBoard>(content, _jsonOptions);
-
-            if (board == null)
-            {
-                throw new InvalidOperationException("Failed to deserialize board response");
-            }
-
-            _logger.LogInformation("Successfully created board: {BoardId} - {BoardName}", board.Id, board.Name);
-            return board;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating board: {BoardName}", request.Name);
-            throw;
-        }
     }
 
     public async Task<TrelloList> CreateListAsync(CreateListRequest request)

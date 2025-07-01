@@ -5,10 +5,11 @@ A C# console application that imports shopping lists into Trello boards using th
 ## Features
 
 - Parses shopping lists organized into categories
-- Adds categories as lists to an existing Trello board or creates a new one
+- Adds categories as lists to an existing Trello board
 - Creates cards for each shopping item
 - Secure credential management
 - Command line interface with proper argument parsing
+- Uses board IDs for precise board targeting (no board creation)
 
 ## Prerequisites
 
@@ -28,7 +29,13 @@ A C# console application that imports shopping lists into Trello boards using th
    dotnet user-secrets init
    dotnet user-secrets set "Trello:ApiKey" "your-api-key-here"
    dotnet user-secrets set "Trello:Token" "your-token-here"
+   dotnet user-secrets set "Trello:DefaultBoardId" "your-board-id-here"
    ```
+
+   To find your board ID:
+   - Open your Trello board in a browser
+   - Look at the URL: `https://trello.com/b/BOARD_ID/board-name`
+   - The BOARD_ID is what you need
 
 3. **Build and run:**
    ```cmd
@@ -47,7 +54,7 @@ Arguments:
   file                  Path to the shopping list file to import
 
 Options:
-  -b, --board <board>   Name of the Trello board to add lists to (defaults to value in appsettings.json)
+  -b, --board <board>   ID of the Trello board to add lists to (defaults to value in appsettings.json)
   -v, --verbose         Show verbose output
   --help                Display help screen
 ```
@@ -55,11 +62,11 @@ Options:
 ### Examples
 
 ```cmd
-# Import to default board
+# Import to default board (using DefaultBoardId from configuration)
 dotnet run -- samples\shopping-list.txt
 
-# Import to specific board
-dotnet run -- samples\shopping-list.txt --board "My Weekly Shopping"
+# Import to specific board by ID
+dotnet run -- samples\shopping-list.txt --board "60d5e7e6f4f4f4f4f4f4f4f4"
 
 # Show verbose output
 dotnet run -- samples\shopping-list.txt --verbose

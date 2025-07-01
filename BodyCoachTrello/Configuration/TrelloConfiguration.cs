@@ -28,11 +28,6 @@ public class TrelloConfiguration
     public string DefaultBoardId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Default description for created boards
-    /// </summary>
-    public string DefaultBoardDescription { get; set; } = "Imported shopping list from Body Coach Trello app";
-
-    /// <summary>
     /// Validates that required configuration is present
     /// </summary>
     public void Validate()
@@ -50,6 +45,11 @@ public class TrelloConfiguration
         if (string.IsNullOrWhiteSpace(BaseUrl))
         {
             throw new InvalidOperationException("Trello Base URL is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(DefaultBoardId))
+        {
+            throw new InvalidOperationException("Trello Default Board ID is required. Please set it using user secrets or environment variables.");
         }
     }
 }

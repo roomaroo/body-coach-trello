@@ -81,21 +81,6 @@ public class TrelloCard
 }
 
 /// <summary>
-/// Request model for creating a board
-/// </summary>
-public class CreateBoardRequest
-{
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
-
-    [JsonPropertyName("desc")]
-    public string? Description { get; set; }
-
-    [JsonPropertyName("defaultLists")]
-    public bool DefaultLists { get; set; } = false;
-}
-
-/// <summary>
 /// Request model for creating a list
 /// </summary>
 public class CreateListRequest
