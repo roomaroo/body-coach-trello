@@ -76,22 +76,34 @@ public class TrelloApiService : ITrelloApiService
     {
         _logger.LogInformation("Creating Trello list: {ListName} on board {BoardId}", request.Name, request.BoardId);
 
-        var queryParams = new List<string>
-        {
-            $"name={Uri.EscapeDataString(request.Name)}",
-            $"idBoard={request.BoardId}",
-            GetAuthQueryParams()
-        };
-
-        if (!string.IsNullOrWhiteSpace(request.Position))
-        {
-            queryParams.Insert(2, $"pos={request.Position}");
-        }
-
-        var url = $"lists?{string.Join("&", queryParams)}";
-
         try
         {
+            // First, check if a list with this name already exists on the board
+            var existingLists = await GetBoardListsAsync(request.BoardId);
+            var existingList = existingLists.FirstOrDefault(l => 
+                string.Equals(l.Name, request.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (existingList != null)
+            {
+                _logger.LogInformation("List already exists: {ListId} - {ListName}", existingList.Id, existingList.Name);
+                return existingList;
+            }
+
+            // If no existing list found, create a new one
+            var queryParams = new List<string>
+            {
+                $"name={Uri.EscapeDataString(request.Name)}",
+                $"idBoard={request.BoardId}",
+                GetAuthQueryParams()
+            };
+
+            if (!string.IsNullOrWhiteSpace(request.Position))
+            {
+                queryParams.Insert(2, $"pos={request.Position}");
+            }
+
+            var url = $"lists?{string.Join("&", queryParams)}";
+
             var response = await _httpClient.PostAsync(url, null);
             await EnsureSuccessStatusCodeAsync(response);
 

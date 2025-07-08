@@ -59,10 +59,21 @@ public class TrelloApiServiceTests : IDisposable
             BoardId = "board123"
         };
 
-        _mockHandler.SetupResponse(HttpStatusCode.OK, JsonSerializer.Serialize(expectedList, new JsonSerializerOptions
+        // Setup sequential responses: first for GetBoardListsAsync (empty array), then for CreateListAsync
+        var emptyListsResponse = JsonSerializer.Serialize(new List<TrelloList>(), new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        }));
+        });
+
+        var createListResponse = JsonSerializer.Serialize(expectedList, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        _mockHandler.SetupSequentialResponses(
+            (HttpStatusCode.OK, emptyListsResponse),  // GetBoardListsAsync response
+            (HttpStatusCode.OK, createListResponse)   // CreateListAsync response
+        );
 
         // Act
         var result = await service.CreateListAsync(request);
@@ -71,6 +82,76 @@ public class TrelloApiServiceTests : IDisposable
         Assert.NotNull(result);
         Assert.Equal("list123", result.Id);
         Assert.Equal("Test List", result.Name);
+        Assert.Equal("board123", result.BoardId);
+    }
+
+    [Fact]
+    public async Task CreateListAsync_ExistingList_ReturnsExistingList()
+    {
+        // Arrange
+        var service = new TrelloApiService(_httpClient, _mockOptions.Object, _mockLogger.Object);
+        var request = new CreateListRequest
+        {
+            Name = "Existing List",
+            BoardId = "board123"
+        };
+
+        var existingList = new TrelloList
+        {
+            Id = "existing-list-123",
+            Name = "Existing List",
+            BoardId = "board123"
+        };
+
+        var existingListsResponse = JsonSerializer.Serialize(new List<TrelloList> { existingList }, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        _mockHandler.SetupResponse(HttpStatusCode.OK, existingListsResponse);
+
+        // Act
+        var result = await service.CreateListAsync(request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("existing-list-123", result.Id);
+        Assert.Equal("Existing List", result.Name);
+        Assert.Equal("board123", result.BoardId);
+    }
+
+    [Fact]
+    public async Task CreateListAsync_ExistingListDifferentCase_ReturnsExistingList()
+    {
+        // Arrange
+        var service = new TrelloApiService(_httpClient, _mockOptions.Object, _mockLogger.Object);
+        var request = new CreateListRequest
+        {
+            Name = "existing list",  // lowercase
+            BoardId = "board123"
+        };
+
+        var existingList = new TrelloList
+        {
+            Id = "existing-list-123",
+            Name = "Existing List",  // different case
+            BoardId = "board123"
+        };
+
+        var existingListsResponse = JsonSerializer.Serialize(new List<TrelloList> { existingList }, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        _mockHandler.SetupResponse(HttpStatusCode.OK, existingListsResponse);
+
+        // Act
+        var result = await service.CreateListAsync(request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("existing-list-123", result.Id);
+        Assert.Equal("Existing List", result.Name);  // Returns the existing list's actual name
         Assert.Equal("board123", result.BoardId);
     }
 
@@ -211,20 +292,30 @@ public class TrelloApiServiceTests : IDisposable
 // Helper class for mocking HttpMessageHandler
 public class MockHttpMessageHandler : HttpMessageHandler
 {
-    private HttpStatusCode _statusCode = HttpStatusCode.OK;
-    private string _content = string.Empty;
+    private readonly Queue<(HttpStatusCode statusCode, string content)> _responses = new();
 
     public void SetupResponse(HttpStatusCode statusCode, string content)
     {
-        _statusCode = statusCode;
-        _content = content;
+        _responses.Clear();
+        _responses.Enqueue((statusCode, content));
+    }
+
+    public void SetupSequentialResponses(params (HttpStatusCode statusCode, string content)[] responses)
+    {
+        _responses.Clear();
+        foreach (var response in responses)
+        {
+            _responses.Enqueue(response);
+        }
     }
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var response = new HttpResponseMessage(_statusCode)
+        var (statusCode, content) = _responses.Count > 0 ? _responses.Dequeue() : (HttpStatusCode.OK, "{}");
+        
+        var response = new HttpResponseMessage(statusCode)
         {
-            Content = new StringContent(_content)
+            Content = new StringContent(content)
         };
 
         return Task.FromResult(response);
