@@ -1,0 +1,131 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Body Coach Trello Shopping List Importer";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Shopping List Importer
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form id="shoppingListForm">
+                        <div class="mb-3">
+                            <label for="shoppingListName" class="form-label">Shopping List Name</label>
+                            <input type="text" class="form-control" id="shoppingListName" placeholder="e.g., 20251022-weekly-shopping" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="shoppingListContent" class="form-label">Shopping List Content</label>
+                            <textarea class="form-control" id="shoppingListContent" rows="15" 
+                                placeholder="Paste your shopping list here...
+
+Example format:
+Vegetables
+Tomatoes
+Onions
+Carrots
+
+Dairy
+Milk
+Cheese
+Yogurt
+
+Recipes:
+Recipe 1
+Recipe 2" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="boardId" class="form-label">Trello Board ID (Optional)</label>
+                            <input type="text" class="form-control" id="boardId" placeholder="Leave empty to use default board">
+                            <small class="form-text text-muted">If not provided, the default board from configuration will be used.</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="importButton">
+                                <i class="fas fa-upload me-2"></i>
+                                Import to Trello
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Progress Card (Initially Hidden) -->
+            <div class="card mt-4" id="progressCard" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Import Progress
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             id="progressBar" 
+                             style="width: 0%">
+                            0%
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Current Category:</strong>
+                            <span id="currentCategory">-</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Current Item:</strong>
+                            <span id="currentItem">-</span>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <strong>Progress:</strong>
+                            <span id="progressText">0 / 0 items</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong>
+                            <span id="statusText" class="badge bg-info">Processing...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Card (Initially Hidden) -->
+            <div class="card mt-4" id="resultCard" style="display: none;">
+                <div class="card-header" id="resultHeader">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Import Results
+                    </h5>
+                </div>
+                <div class="card-body" id="resultBody">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+
+            <!-- Connection Test -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <button type="button" class="btn btn-outline-secondary" id="testConnectionButton">
+                        <i class="fas fa-wifi me-2"></i>
+                        Test Trello Connection
+                    </button>
+                    <small class="text-muted ms-3" id="connectionStatus">Click to test your Trello API connection</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft-signalr/signalr.min.js"></script>
+    <script src="~/js/shopping-list.js"></script>
+}

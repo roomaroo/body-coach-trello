@@ -29,4 +29,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BodyCoachTrello.Core\BodyCoachTrello.Core.csproj" />
+  </ItemGroup>
+
 </Project>

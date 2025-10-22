@@ -73,6 +73,28 @@
 - Use System.Text.Json for JSON serialization/deserialization
 - Consider using Span<T> and Memory<T> for high-performance scenarios
 
+## Web Development Guidelines
+
+### Frontend Technology Stack
+- **Use ASP.NET Core with Razor Pages for web applications**
+- Avoid single-page application (SPA) frameworks like React, Angular, or Vue.js
+- Prefer server-side rendering over client-side rendering
+- Use Razor syntax for dynamic HTML generation
+- Leverage ASP.NET Core's built-in features for forms, validation, and routing
+
+### Backend-First Development Approach
+- **Prefer to implement business logic on the backend rather than in frontend JavaScript**
+- Keep JavaScript minimal and focused on user interface enhancements only
+- Use server-side validation as the primary validation mechanism
+- Implement data processing, calculations, and complex logic in C# controllers and services
+- Use HTMX or similar libraries for progressive enhancement when dynamic behavior is needed
+
+### Architecture Considerations
+- Follow the Model-View-Controller (MVC) or Model-View-PageModel (Razor Pages) patterns
+- Use strongly-typed models for data binding between views and controllers
+- Implement proper separation of concerns with dedicated service layers
+- Use dependency injection for managing service lifetimes and testability
+
 ## Testing
 
 ### Unit Testing

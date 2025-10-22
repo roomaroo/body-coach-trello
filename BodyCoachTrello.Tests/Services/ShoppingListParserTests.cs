@@ -1,8 +1,8 @@
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
-using BodyCoachTrello.Services;
-using BodyCoachTrello.Models;
+using BodyCoachTrello.Core.Services;
+using BodyCoachTrello.Core.Models;
 
 namespace BodyCoachTrello.Tests.Services;
 

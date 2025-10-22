@@ -1,10 +1,10 @@
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
-using BodyCoachTrello.Services;
-using BodyCoachTrello.Configuration;
-using BodyCoachTrello.Models;
-using BodyCoachTrello.Models.Trello;
+using BodyCoachTrello.Core.Services;
+using BodyCoachTrello.Core.Configuration;
+using BodyCoachTrello.Core.Models;
+using BodyCoachTrello.Core.Models.Trello;
 using Microsoft.Extensions.Options;
 
 namespace BodyCoachTrello.Tests.Services;

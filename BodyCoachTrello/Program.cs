@@ -1,5 +1,6 @@
 using BodyCoachTrello.Configuration;
-using BodyCoachTrello.Services;
+using BodyCoachTrello.Core.Configuration;
+using BodyCoachTrello.Core.Services;
 using CommandLine;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -125,7 +126,7 @@ public class Application
     /// <summary>
     /// Display import results
     /// </summary>
-    private void DisplayResults(Models.Trello.TrelloBoard board, Models.ParsedShoppingList shoppingList)
+    private void DisplayResults(BodyCoachTrello.Core.Models.Trello.TrelloBoard board, BodyCoachTrello.Core.Models.ParsedShoppingList shoppingList)
     {
         Console.WriteLine();
         Console.WriteLine("🎉 Import Results:");
